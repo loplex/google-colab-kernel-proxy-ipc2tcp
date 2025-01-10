@@ -3,14 +3,19 @@ set -eu
 
 cd "$( dirname "$0" )/.."
 
-declare kernelSpecsDir='./venv/share/jupyter/kernels'
 declare kernelProxyCmdName='kernel_proxy_ipc2tcp.sh'
 declare jqVersion='1.7.1'
 
 declare wrappedTcpKernel="$1" newProxyKernelName="${2:-"${1}_ipc2tcp_proxy"}"
+
 declare jupyterCmd; jupyterCmd="$( which 'jupyter' )"
-declare arch="linux-$( uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/' )"
-declare -p wrappedTcpKernel newProxyKernelName jupyterCmd arch
+declare rootPrefix="${jupyterCmd%"/bin/jupyter"}"
+declare arch; arch="linux-$( uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/' )"
+declare kernelSpecsDir="${rootPrefix}/share/jupyter/kernels"
+
+
+
+declare -p jupyterCmd rootPrefix wrappedTcpKernel newProxyKernelName arch
 
 
 function downloadJq() {
@@ -36,7 +41,7 @@ function createKernelSpecDir() {
 
 ### MAIN
 
-declare kernelDir; kernelDir="$( readlink -f "${kernelSpecsDir}/${newProxyKernelName}" )"
+declare kernelDir; kernelDir="${kernelSpecsDir}/${newProxyKernelName}"
 
 createKernelSpecDir "${kernelDir}"
 downloadJq "${kernelDir}" "${jqVersion}" "${arch}"
