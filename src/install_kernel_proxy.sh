@@ -3,19 +3,17 @@ set -eu
 
 cd "$( dirname "$0" )/.."
 
+declare kernelSpecsSubDir='share/jupyter/kernels'
 declare kernelProxyCmdName='kernel_proxy_ipc2tcp.sh'
 declare jqVersion='1.7.1'
 
 declare wrappedTcpKernel="$1" newProxyKernelName="${2:-"${1}_ipc2tcp_proxy"}"
+declare -p wrappedTcpKernel newProxyKernelName
 
 declare jupyterCmd; jupyterCmd="$( which 'jupyter' )"
-declare rootPrefix="${jupyterCmd%"/bin/jupyter"}"
+declare sysPrefix; sysPrefix="$( python -c 'import sys; print (sys.prefix)' )"
 declare arch; arch="linux-$( uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/' )"
-declare kernelSpecsDir="${rootPrefix}/share/jupyter/kernels"
-
-
-
-declare -p jupyterCmd rootPrefix wrappedTcpKernel newProxyKernelName arch
+declare -p jupyterCmd sysPrefix arch
 
 
 function downloadJq() {
@@ -42,17 +40,17 @@ function createKernelSpecDir() {
 
 ### MAIN
 
-declare kernelDir; kernelDir="${kernelSpecsDir}/${newProxyKernelName}"
+declare kernelSpecDirPath="${sysPrefix}/${kernelSpecsSubDir}/${newProxyKernelName}"
 
-createKernelSpecDir "${kernelDir}"
-downloadJq "${kernelDir}" "${jqVersion}" "${arch}"
+createKernelSpecDir "${kernelSpecDirPath}"
+downloadJq "${kernelSpecDirPath}" "${jqVersion}" "${arch}"
 
 # create connection file using wrapped kernel connection file as template
 # shellcheck disable=SC2016
-"${kernelDir}"/jq \
+"${sysPrefix}/${kernelSpecsSubDir}/${newProxyKernelName}"/jq \
   '.argv=$ARGS.positional | .name=$kernelName | .display_name+=$displayNameSuffix' \
   --arg 'displayNameSuffix' ' (ipc2tcp_proxy)' \
   --arg 'kernelName' "${newProxyKernelName}" \
-  --args "${kernelDir}/${kernelProxyCmdName}" "${wrappedTcpKernel}" '{connection_file}' "${jupyterCmd}" \
-  < "${kernelSpecsDir}/${wrappedTcpKernel}/kernel.json" \
-  > "${kernelDir}/kernel.json"
+  --args "{prefix}/${kernelSpecsSubDir}/${newProxyKernelName}/${kernelProxyCmdName}" "${wrappedTcpKernel}" '{connection_file}' "${jupyterCmd}" \
+  < "${sysPrefix}/${kernelSpecsSubDir}/${wrappedTcpKernel}/kernel.json" \
+  > "${kernelSpecDirPath}/kernel.json"
