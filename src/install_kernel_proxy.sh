@@ -21,11 +21,12 @@ declare -p jupyterCmd rootPrefix wrappedTcpKernel newProxyKernelName arch
 function downloadJq() {
   local downloadDir="$1" jqVersion="$2" arch="$3"
   if ! "${downloadDir}/jq" --version >'/dev/null' 2>&1; then
-    set -x
-    mkdir -p "${downloadDir}"
-    wget --backups "https://github.com/jqlang/jq/releases/download/jq-${jqVersion}/jq-${arch}" -O "${downloadDir}/jq"
-    chmod +x "${downloadDir}/jq"
-    set +x
+    { set -x
+      mkdir -p "${downloadDir}"
+      wget --backups --progress=bar -O "${downloadDir}/jq" \
+        "https://github.com/jqlang/jq/releases/download/jq-${jqVersion}/jq-${arch}"
+      chmod +x "${downloadDir}/jq"
+    }
   fi
 }
 
