@@ -23,7 +23,7 @@ function downloadJq() {
   if ! "${downloadDir}/jq" --version >'/dev/null' 2>&1; then
     { set -x
       mkdir -p "${downloadDir}"
-      wget --backups --progress=bar -O "${downloadDir}/jq" \
+      wget --backups --progress='bar:force:noscroll' -O "${downloadDir}/jq" \
         "https://github.com/jqlang/jq/releases/download/jq-${jqVersion}/jq-${arch}"
       chmod +x "${downloadDir}/jq"
     }

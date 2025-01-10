@@ -81,7 +81,8 @@ function terminateSubprocesses() {
 printf '\nconnect using e.g.:\n'
 printf '%q console --existing %q\n\n' "${jupyterCmd}" "${connFile##*/}"
 
-declare tcpKernelConnFileName; tcpKernelConnFileName="kernel-$( uuid ).json"
+declare tcpKernelSessionUuid; tcpKernelSessionUuid=$(<'/proc/sys/kernel/random/uuid')
+declare tcpKernelConnFileName="kernel-${tcpKernelSessionUuid}.json"
 
 startWrappedTcpKernel "${tcpKernelConnFileName}"
 
